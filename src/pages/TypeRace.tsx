@@ -18,6 +18,7 @@ import {
   formatTime,
   sample,
   stripAccents,
+  unifyDashes,
   timestamp,
   useVocabulary,
   type Lang,
@@ -34,10 +35,11 @@ const targetText = (word: Word, mode: Mode) => {
   return mode === "lenient" ? text.replace(/[¿¡]/g, "").trim() : text;
 };
 
-const sameChar = (typed: string, expected: string, mode: Mode) =>
-  mode === "strict"
-    ? typed === expected
-    : stripAccents(typed) === stripAccents(expected);
+const sameChar = (typed: string, expected: string, mode: Mode) => {
+  const a = unifyDashes(typed);
+  const b = unifyDashes(expected);
+  return mode === "strict" ? a === b : stripAccents(a) === stripAccents(b);
+};
 
 function TypeRace() {
   const { categories, words, loading, error } = useVocabulary();

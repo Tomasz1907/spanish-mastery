@@ -155,8 +155,13 @@ export function stripAccents(text: string): string {
   return text.normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
+// długie myślniki (—, –, ‒, ―, −) są nie do wpisania z klawiatury - traktujemy je jak "-"
+export function unifyDashes(text: string): string {
+  return text.replace(/[\u2010-\u2015\u2212]/g, "-");
+}
+
 export function normalize(text: string, ignoreAccents = false): string {
-  let result = text.toLowerCase().trim();
+  let result = unifyDashes(text).toLowerCase().trim();
 
   if (ignoreAccents) result = stripAccents(result);
 
