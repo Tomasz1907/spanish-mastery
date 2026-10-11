@@ -152,10 +152,11 @@ function TypeRace() {
     play("finish");
     recorder.save({
       game: "type-race",
-      mode,
+      // liczba zdań jest częścią trybu
+      mode: `${mode}:${sentences.length}`,
       correct: sentences.length,
       total: sentences.length,
-      bestValue: sentences.length >= 3 ? wpm : null,
+      bestValue: wpm,
       durationMs: elapsed,
       wpm,
       settings: {
@@ -190,7 +191,8 @@ function TypeRace() {
       ? Math.round(((keystrokes - typos) / keystrokes) * 100)
       : 100;
 
-  const best = profile?.best?.[bestKey("type-race", mode)] ?? null;
+  const best =
+    profile?.best?.[bestKey("type-race", `${mode}:${count}`)] ?? null;
 
   return (
     <section>
@@ -314,11 +316,7 @@ function TypeRace() {
       )}
 
       {phase !== "play" && (
-        <Leaderboard
-          game="type-race"
-          mode={mode}
-          note="Races with 3+ sentences count."
-        />
+        <Leaderboard game="type-race" mode={`${mode}:${count}`} />
       )}
     </section>
   );

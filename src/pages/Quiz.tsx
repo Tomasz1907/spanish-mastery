@@ -116,10 +116,11 @@ function Quiz() {
       const percent = Math.round((score / questions.length) * 100);
       recorder.save({
         game: "quiz",
-        mode: `${lang}:${direction}`,
+        // liczba pytań jest częścią trybu - 100% z 5 pytań to inny ranking niż z 50
+        mode: `${lang}:${direction}:${questions.length}`,
         correct: score,
         total: questions.length,
-        bestValue: questions.length >= 10 ? percent : null,
+        bestValue: percent,
         words: answers,
         settings: { category, lang, direction },
       });
@@ -294,8 +295,7 @@ function Quiz() {
       {phase !== "play" && (
         <Leaderboard
           game="quiz"
-          mode={`${lang}:${direction}`}
-          note="Only quizzes with 10+ questions count."
+          mode={`${lang}:${direction}:${questionCount}`}
         />
       )}
     </section>

@@ -400,18 +400,25 @@ export function lastDays(n: number): { key: string; date: Date }[] {
 
 export function formatMode(game: GameId, mode: string): string {
   const flag = (lang: string) => (lang === "pl" ? "🇵🇱" : "🇬🇧");
-  const [a, b] = mode.split(":");
+  const [a, b, c] = mode.split(":");
 
   switch (game) {
+    // tryb: język:kierunek:liczba pytań
     case "quiz":
-    case "test":
-      return `${flag(a)} ${b === "from-es" ? "ES → " + a.toUpperCase() : a.toUpperCase() + " → ES"}`;
+    case "test": {
+      const dir =
+        b === "from-es" ? "ES → " + a.toUpperCase() : a.toUpperCase() + " → ES";
+      return c ? `${flag(a)} ${dir} · ${c} questions` : `${flag(a)} ${dir}`;
+    }
     case "match-chaos":
       return `${flag(a)} ${b}s`;
     case "tag-sort":
       return `${a} rounds`;
-    case "type-race":
-      return a === "strict" ? "Strict" : "Lenient";
+    // tryb: akcenty:liczba zdań
+    case "type-race": {
+      const accents = a === "strict" ? "Strict" : "Lenient";
+      return b ? `${accents} · ${b} sentences` : accents;
+    }
   }
 }
 
