@@ -27,3 +27,5 @@ dist-ssr
 # Firebase
 .firebase/
 firebase-debug.log
+.env*
+!.env.example
