@@ -185,10 +185,38 @@ export function acceptedAnswers(text: string): string[] {
   return [...answers];
 }
 
-export function spanishAnswers(word: WordItem): string[] {
-  const answers = acceptedAnswers(word.word);
+const ARTICLES = ["el", "la", "los", "las"];
 
-  if (word.article) answers.push(`${word.article} ${word.word}`);
+// W danych większość rzeczowników ma rodzajnik w polu word ("la familia"),
+// a kilka osobno w polu article ("pregunta" + "la") - ujednolicamy to tutaj.
+export function splitArticle(word: WordItem): {
+  article: string | null;
+  base: string;
+} {
+  const [first, ...rest] = word.word.split(" ");
+
+  if (
+    word.part_of_speech === "noun" &&
+    ARTICLES.includes(first) &&
+    rest.length
+  ) {
+    return { article: first, base: rest.join(" ") };
+  }
+
+  return { article: word.article ?? null, base: word.word };
+}
+
+export function withArticle(word: WordItem): string {
+  const { article, base } = splitArticle(word);
+  return article ? `${article} ${base}` : base;
+}
+
+// odpowiedź po hiszpańsku jest poprawna z rodzajnikiem i bez
+export function spanishAnswers(word: WordItem): string[] {
+  const { article, base } = splitArticle(word);
+  const answers = acceptedAnswers(base);
+
+  if (article) answers.push(`${article} ${base}`);
 
   return answers;
 }
@@ -206,39 +234,6 @@ export function checkAnswer(input: string, accepted: string[]): CheckResult {
   if (loose.includes(normalize(input, true))) return "accent";
 
   return "wrong";
-}
-
-// RECORDS (localStorage)
-
-export function getBest(key: string): number | null {
-  try {
-    const value = localStorage.getItem(`best:${key}`);
-    return value === null ? null : Number(value);
-  } catch {
-    return null;
-  }
-}
-
-// zapisuje wynik, jeśli jest lepszy; zwraca true przy nowym rekordzie
-export function saveBest(
-  key: string,
-  value: number,
-  higherIsBetter = true,
-): boolean {
-  const best = getBest(key);
-
-  const isRecord =
-    best === null || (higherIsBetter ? value > best : value < best);
-
-  if (isRecord) {
-    try {
-      localStorage.setItem(`best:${key}`, String(value));
-    } catch {
-      // brak dostępu do localStorage - pomijamy
-    }
-  }
-
-  return isRecord;
 }
 
 export function formatTime(ms: number): string {

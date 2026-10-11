@@ -22,11 +22,7 @@ function requireAuth(): Auth {
   return auth;
 }
 
-export async function register(
-  name: string,
-  email: string,
-  password: string,
-) {
+export async function register(name: string, email: string, password: string) {
   const { user } = await createUserWithEmailAndPassword(
     requireAuth(),
     email,
@@ -93,7 +89,6 @@ export function authErrorMessage(err: unknown): string {
 // błędy, przy których nie pokazujemy komunikatu (użytkownik sam przerwał)
 export function isCancelled(err: unknown): boolean {
   return (
-    err instanceof FirebaseError &&
-    err.code === "auth/cancelled-popup-request"
+    err instanceof FirebaseError && err.code === "auth/cancelled-popup-request"
   );
 }

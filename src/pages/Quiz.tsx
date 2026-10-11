@@ -11,19 +11,21 @@ import {
   SetupPanel,
   type Mistake,
 } from "../components/GameUI";
+import Leaderboard from "../components/Leaderboard";
 import { categoryOptions, countOptions, langOptions } from "../lib/options";
 import {
   exampleOf,
   filterByCategory,
   pickDistractors,
   sample,
-  saveBest,
   shuffle,
   translationOf,
   useVocabulary,
   type Lang,
   type Word,
 } from "../lib/vocab";
+import { play } from "../lib/sound";
+import { useGameRecorder } from "../lib/progress";
 
 type Direction = "from-es" | "to-es";
 
@@ -51,7 +53,9 @@ function Quiz() {
   const [picked, setPicked] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [mistakes, setMistakes] = useState<Mistake[]>([]);
-  const [record, setRecord] = useState(false);
+  const [answers, setAnswers] = useState<{ id: string; ok: boolean }[]>([]);
+
+  const recorder = useGameRecorder();
 
   const available = filterByCategory(words, category);
   const questionCount = Math.min(count, available.length);
@@ -67,10 +71,7 @@ function Quiz() {
         word,
         prompt: direction === "from-es" ? word.word : translationOf(word, lang),
         correct,
-        options: shuffle([
-          correct,
-          ...pickDistractors(word, words, 3, textOf),
-        ]),
+        options: shuffle([correct, ...pickDistractors(word, words, 3, textOf)]),
       };
     });
 
@@ -79,7 +80,7 @@ function Quiz() {
     setPicked(null);
     setScore(0);
     setMistakes([]);
-    setRecord(false);
+    setAnswers([]);
     setPhase("play");
   };
 
@@ -90,6 +91,11 @@ function Quiz() {
       if (!question || picked !== null) return;
 
       setPicked(option);
+      play(option === question.correct ? "correct" : "wrong");
+      setAnswers((a) => [
+        ...a,
+        { id: question.word.id, ok: option === question.correct },
+      ]);
 
       if (option === question.correct) {
         setScore((s) => s + 1);
@@ -108,15 +114,33 @@ function Quiz() {
 
     if (index + 1 >= questions.length) {
       const percent = Math.round((score / questions.length) * 100);
-      setRecord(
-        questions.length >= 10 && saveBest(`quiz:${lang}:${direction}`, percent),
-      );
+      recorder.save({
+        game: "quiz",
+        mode: `${lang}:${direction}`,
+        correct: score,
+        total: questions.length,
+        bestValue: questions.length >= 10 ? percent : null,
+        words: answers,
+        settings: { category, lang, direction },
+      });
+      play("finish");
       setPhase("done");
     } else {
+      play("click");
       setIndex((i) => i + 1);
       setPicked(null);
     }
-  }, [picked, index, questions.length, score, lang, direction]);
+  }, [
+    picked,
+    index,
+    questions.length,
+    score,
+    lang,
+    direction,
+    category,
+    answers,
+    recorder,
+  ]);
 
   // KLAWIATURA: 1-4 wybór, Enter dalej
   useEffect(() => {
@@ -251,10 +275,9 @@ function Quiz() {
 
       {phase === "done" && (
         <ResultScreen
-          title={
-            score === questions.length ? "Perfect! 🎉" : "Quiz finished"
-          }
-          record={record}
+          title={score === questions.length ? "Perfect! 🎉" : "Quiz finished"}
+          record={recorder.record}
+          save={recorder}
           stats={[
             { label: "Correct", value: `${score}/${questions.length}` },
             {
@@ -265,6 +288,14 @@ function Quiz() {
           mistakes={mistakes}
           onRestart={start}
           onSetup={() => setPhase("setup")}
+        />
+      )}
+
+      {phase !== "play" && (
+        <Leaderboard
+          game="quiz"
+          mode={`${lang}:${direction}`}
+          note="Only quizzes with 10+ questions count."
         />
       )}
     </section>

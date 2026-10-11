@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import Category from "../components/Category";
 import SearchBar from "../components/SearchBar";
+import StreakBanner from "../components/StreakBanner";
 import { useVocabulary, type CategoryData } from "../lib/vocab";
 
 const PAGE_SIZE = 40;
@@ -174,6 +175,8 @@ function Home() {
           ))}
         </div>
       </section>
+
+      <StreakBanner />
 
       {/* GAMES */}
       <section>

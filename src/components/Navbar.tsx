@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { isFirebaseConfigured } from "../lib/firebase";
 import { logout } from "../lib/auth";
+import SoundControl from "./SoundControl";
 
 const links = [
   {
@@ -54,9 +55,14 @@ function UserMenu() {
 
   return (
     <div className="ml-2 flex items-center gap-2">
-      <span
-        title={user.email ?? undefined}
-        className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-sm font-medium text-heading"
+      <NavLink
+        to="/profile"
+        title="Your profile"
+        className={({ isActive }) =>
+          `flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm font-medium text-heading transition hover:border-accent ${
+            isActive ? "border-accent bg-accent-soft" : "border-line bg-surface"
+          }`
+        }
       >
         {user.photoURL ? (
           <img
@@ -71,7 +77,7 @@ function UserMenu() {
           </span>
         )}
         <span className="max-w-32 truncate">{name}</span>
-      </span>
+      </NavLink>
 
       <button
         onClick={() => logout()}
@@ -121,11 +127,13 @@ function Navbar() {
           </NavLink>
         ))}
 
+        <SoundControl />
+
         <button
           onClick={() => setDark((prev) => !prev)}
           aria-label={dark ? "Light theme" : "Dark theme"}
           title={dark ? "Light theme" : "Dark theme"}
-          className="ml-2 grid h-9 w-9 place-items-center rounded-full border border-line bg-surface text-base transition hover:border-accent active:scale-95"
+          className="ml-1 grid h-9 w-9 place-items-center rounded-full border border-line bg-surface text-base transition hover:border-accent active:scale-95"
         >
           {dark ? "☀️" : "🌙"}
         </button>

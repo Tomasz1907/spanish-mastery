@@ -11,20 +11,23 @@ import {
   SetupPanel,
   type Mistake,
 } from "../components/GameUI";
+import Leaderboard from "../components/Leaderboard";
 import { categoryOptions, countOptions, langOptions } from "../lib/options";
 import {
   acceptedAnswers,
   checkAnswer,
   filterByCategory,
   sample,
-  saveBest,
   spanishAnswers,
   translationOf,
   useVocabulary,
+  withArticle,
   type CheckResult,
   type Lang,
   type Word,
 } from "../lib/vocab";
+import { play } from "../lib/sound";
+import { useGameRecorder } from "../lib/progress";
 
 type Direction = "to-es" | "from-es";
 
@@ -52,7 +55,9 @@ function Test() {
   const [result, setResult] = useState<CheckResult | null>(null);
   const [score, setScore] = useState(0);
   const [mistakes, setMistakes] = useState<Mistake[]>([]);
-  const [record, setRecord] = useState(false);
+  const [answers, setAnswers] = useState<{ id: string; ok: boolean }[]>([]);
+
+  const recorder = useGameRecorder();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -65,9 +70,7 @@ function Test() {
     direction === "to-es" ? translationOf(w, lang) : w.word;
 
   const solutionOf = (w: Word) =>
-    direction === "to-es"
-      ? (w.article ? `${w.article} ` : "") + w.word
-      : translationOf(w, lang);
+    direction === "to-es" ? withArticle(w) : translationOf(w, lang);
 
   const start = () => {
     setQuestions(sample(available, questionCount));
@@ -76,7 +79,7 @@ function Test() {
     setResult(null);
     setScore(0);
     setMistakes([]);
-    setRecord(false);
+    setAnswers([]);
     setPhase("play");
     setTimeout(() => inputRef.current?.focus(), 0);
   };
@@ -100,6 +103,10 @@ function Test() {
     const check = checkAnswer(answer, accepted);
 
     setResult(check);
+    play(
+      check === "correct" ? "correct" : check === "accent" ? "almost" : "wrong",
+    );
+    setAnswers((a) => [...a, { id: word.id, ok: check !== "wrong" }]);
 
     if (check === "wrong") {
       setMistakes((m) => [
@@ -115,6 +122,8 @@ function Test() {
     if (!word || result !== null) return;
 
     setResult("wrong");
+    play("wrong");
+    setAnswers((a) => [...a, { id: word.id, ok: false }]);
     setMistakes((m) => [
       ...m,
       { prompt: promptOf(word), given: "", correct: solutionOf(word) },
@@ -124,14 +133,21 @@ function Test() {
   const next = () => {
     if (index + 1 >= questions.length) {
       const percent = Math.round((score / questions.length) * 100);
-      setRecord(
-        questions.length >= 10 &&
-          saveBest(`test:${lang}:${direction}`, percent),
-      );
+      recorder.save({
+        game: "test",
+        mode: `${lang}:${direction}`,
+        correct: score,
+        total: questions.length,
+        bestValue: questions.length >= 10 ? percent : null,
+        words: answers,
+        settings: { category, lang, direction },
+      });
+      play("finish");
       setPhase("done");
       return;
     }
 
+    play("click");
     setIndex((i) => i + 1);
     setAnswer("");
     setResult(null);
@@ -280,7 +296,8 @@ function Test() {
       {phase === "done" && (
         <ResultScreen
           title={score === questions.length ? "Perfect! 🎉" : "Test finished"}
-          record={record}
+          record={recorder.record}
+          save={recorder}
           stats={[
             { label: "Correct", value: `${score}/${questions.length}` },
             {
@@ -291,6 +308,14 @@ function Test() {
           mistakes={mistakes}
           onRestart={start}
           onSetup={() => setPhase("setup")}
+        />
+      )}
+
+      {phase !== "play" && (
+        <Leaderboard
+          game="test"
+          mode={`${lang}:${direction}`}
+          note="Only tests with 10+ questions count."
         />
       )}
     </section>

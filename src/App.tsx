@@ -11,6 +11,7 @@ import TypeRace from "./pages/TypeRace";
 import TagSort from "./pages/TagSort";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="/tag-sort" element={<TagSort />} />
             <Route path="/match-chaos" element={<MatchChaos />} />
             <Route path="/type-race" element={<TypeRace />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -10,20 +10,21 @@ import {
   SetupPanel,
   Stat,
 } from "../components/GameUI";
+import Leaderboard from "../components/Leaderboard";
 import { categoryOptions, langOptions } from "../lib/options";
 import {
   exampleOf,
   filterByCategory,
   formatTime,
-  getBest,
   sample,
-  saveBest,
   stripAccents,
   timestamp,
   useVocabulary,
   type Lang,
   type Word,
 } from "../lib/vocab";
+import { bestKey, useGameRecorder, useUserProfile } from "../lib/progress";
+import { play } from "../lib/sound";
 
 type Mode = "strict" | "lenient";
 
@@ -58,14 +59,14 @@ function TypeRace() {
   const [finishedAt, setFinishedAt] = useState(0);
   const [keystrokes, setKeystrokes] = useState(0);
   const [typos, setTypos] = useState(0);
-  const [record, setRecord] = useState(false);
+  const recorder = useGameRecorder();
+  const { profile } = useUserProfile();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const available = filterByCategory(words, category).filter(
     (w) => w.example_es,
   );
-  const bestKey = `typerace:${mode}`;
 
   const start = () => {
     setSentences(sample(available, Math.min(count, available.length)));
@@ -75,7 +76,6 @@ function TypeRace() {
     setNow(0);
     setKeystrokes(0);
     setTypos(0);
-    setRecord(false);
     setPhase("play");
     setTimeout(() => inputRef.current?.focus(), 0);
   };
@@ -106,13 +106,18 @@ function TypeRace() {
     const next = value.slice(0, target.length);
 
     // liczymy tylko nowo dopisane znaki
+    let added = 0;
+    let wrongAdded = 0;
+
     if (next.length > typed.length) {
-      const added = next.length - typed.length;
-      let wrongAdded = 0;
+      added = next.length - typed.length;
 
       for (let i = typed.length; i < next.length; i++) {
         if (!sameChar(next[i], target[i], mode)) wrongAdded++;
       }
+
+      // cichy „klik” klawisza, niski ton przy literówce
+      play(wrongAdded > 0 ? "typo" : "key");
 
       setKeystrokes((k) => k + added);
       setTypos((n) => n + wrongAdded);
@@ -128,6 +133,7 @@ function TypeRace() {
     }
 
     if (index + 1 < sentences.length) {
+      play("correct");
       setIndex((i) => i + 1);
       setTyped("");
       return;
@@ -139,7 +145,28 @@ function TypeRace() {
 
     setTyped(next);
     setFinishedAt(t);
-    setRecord(sentences.length >= 3 && saveBest(bestKey, wpm));
+
+    const totalKeys = keystrokes + added;
+    const totalTypos = typos + wrongAdded;
+
+    play("finish");
+    recorder.save({
+      game: "type-race",
+      mode,
+      correct: sentences.length,
+      total: sentences.length,
+      bestValue: sentences.length >= 3 ? wpm : null,
+      durationMs: elapsed,
+      wpm,
+      settings: {
+        category,
+        sentences: sentences.length,
+        accuracy:
+          totalKeys > 0
+            ? Math.round(((totalKeys - totalTypos) / totalKeys) * 100)
+            : 100,
+      },
+    });
     setPhase("done");
   };
 
@@ -153,8 +180,7 @@ function TypeRace() {
   const doneChars =
     sentences
       .slice(0, index)
-      .reduce((sum, w) => sum + targetText(w, mode).length, 0) +
-    typed.length;
+      .reduce((sum, w) => sum + targetText(w, mode).length, 0) + typed.length;
 
   const wpm =
     elapsed > 1000 ? Math.round(doneChars / 5 / (elapsed / 60000)) : 0;
@@ -164,7 +190,7 @@ function TypeRace() {
       ? Math.round(((keystrokes - typos) / keystrokes) * 100)
       : 100;
 
-  const best = getBest(bestKey);
+  const best = profile?.best?.[bestKey("type-race", mode)] ?? null;
 
   return (
     <section>
@@ -274,7 +300,8 @@ function TypeRace() {
       {phase === "done" && (
         <ResultScreen
           title="Finish line! 🏁"
-          record={record}
+          record={recorder.record}
+          save={recorder}
           stats={[
             { label: "WPM", value: wpm },
             { label: "Time", value: formatTime(elapsed) },
@@ -283,6 +310,14 @@ function TypeRace() {
           ]}
           onRestart={start}
           onSetup={() => setPhase("setup")}
+        />
+      )}
+
+      {phase !== "play" && (
+        <Leaderboard
+          game="type-race"
+          mode={mode}
+          note="Races with 3+ sentences count."
         />
       )}
     </section>

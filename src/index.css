@@ -19,6 +19,10 @@
   --bad: #dc2626;
   --bad-bg: rgba(220, 38, 38, 0.12);
 
+  /* wykresy - zwalidowane dla obu motywów i daltonizmu (z odstępami i etykietami) */
+  --chart-mastered: #16a34a;
+  --chart-learning: #d97706;
+
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
@@ -86,6 +90,8 @@
   --color-good-soft: var(--good-bg);
   --color-bad: var(--bad);
   --color-bad-soft: var(--bad-bg);
+  --color-chart-mastered: var(--chart-mastered);
+  --color-chart-learning: var(--chart-learning);
   --shadow-card: var(--shadow);
 }
 

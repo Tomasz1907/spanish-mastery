@@ -1,5 +1,11 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, type Auth } from "firebase/auth";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  type Firestore,
+} from "firebase/firestore";
 
 // Wartości pochodzą z pliku .env.local (patrz .env.example).
 // Firebase Console -> Project settings -> Your apps -> Web app -> SDK config
@@ -26,6 +32,11 @@ export const auth: Auth | null = app ? getAuth(app) : null;
 
 export const googleProvider = new GoogleAuthProvider();
 
-// Gdy będziesz potrzebować bazy danych:
-// import { getFirestore } from "firebase/firestore";
-// export const db = app ? getFirestore(app) : null;
+// FIRESTORE - wyniki i postęp użytkownika (z cache offline)
+export const db: Firestore | null = app
+  ? initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    })
+  : null;

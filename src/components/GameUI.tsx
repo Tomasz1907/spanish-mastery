@@ -1,5 +1,7 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { useEffect, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+
+import { play } from "../lib/sound";
 
 // BUTTON
 
@@ -165,7 +167,10 @@ export function SetupPanel({
 
       <Button
         className="mt-8 w-full text-lg"
-        onClick={onStart}
+        onClick={() => {
+          play("start");
+          onStart();
+        }}
         disabled={!canStart}
       >
         Start ▶
@@ -186,6 +191,7 @@ export function ResultScreen({
   title,
   stats,
   record,
+  save,
   mistakes = [],
   onRestart,
   onSetup,
@@ -193,10 +199,26 @@ export function ResultScreen({
   title: string;
   stats: { label: string; value: ReactNode }[];
   record?: boolean;
+  save?: {
+    status: "idle" | "saving" | "saved" | "error";
+    xp: number;
+    streak?: number;
+    newDay?: boolean;
+  };
   mistakes?: Mistake[];
   onRestart: () => void;
   onSetup: () => void;
 }) {
+  const saved = save?.status === "saved";
+  const streakUp = saved && save?.newDay && (save.streak ?? 0) > 0;
+
+  // po zapisie: fanfara za rekord, ciepły akord za przedłużoną serię dni
+  useEffect(() => {
+    if (!saved) return;
+    if (record) play("record");
+    else if (streakUp) play("streak");
+  }, [saved, record, streakUp]);
+
   return (
     <Panel className="max-w-2xl mx-auto animate-pop">
       <h2 className="text-3xl mb-2">{title}</h2>
@@ -205,6 +227,44 @@ export function ResultScreen({
         <p className="mb-4 font-semibold text-accent-strong">
           🏆 New personal best!
         </p>
+      )}
+
+      {save && save.status !== "idle" && (
+        <p
+          role="status"
+          className={`mx-auto inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium ${
+            save.status === "error"
+              ? "bg-bad-soft text-bad"
+              : "bg-surface-2 text-heading"
+          }`}
+        >
+          {save.status === "saving" && "☁️ Saving to your profile..."}
+          {save.status === "saved" && (
+            <>
+              ✅ Saved to your profile
+              <span className="font-bold text-accent-strong">
+                +{save.xp} XP
+              </span>
+            </>
+          )}
+          {save.status === "error" && "⚠️ Couldn't save this result"}
+        </p>
+      )}
+
+      {streakUp && (
+        <div className="mx-auto mt-4 flex max-w-sm items-center gap-3 rounded-2xl border border-accent-border bg-accent-soft px-4 py-3 text-left animate-pop">
+          <span className="text-3xl animate-float">🔥</span>
+          <span>
+            <span className="block font-bold text-heading">
+              {save!.streak === 1
+                ? "Streak started!"
+                : `${save!.streak}-day streak!`}
+            </span>
+            <span className="block text-sm">
+              Come back tomorrow to keep it going.
+            </span>
+          </span>
+        </div>
       )}
 
       <div className="flex flex-wrap justify-center gap-3 my-6">
@@ -224,9 +284,7 @@ export function ResultScreen({
                 className="rounded-xl bg-surface-2 px-4 py-2 flex flex-wrap gap-x-3"
               >
                 <span className="font-semibold text-heading">{m.prompt}</span>
-                <span className="text-bad line-through">
-                  {m.given || "—"}
-                </span>
+                <span className="text-bad line-through">{m.given || "—"}</span>
                 <span className="text-good">{m.correct}</span>
               </li>
             ))}
@@ -235,7 +293,14 @@ export function ResultScreen({
       )}
 
       <div className="flex flex-wrap justify-center gap-3 mt-8">
-        <Button onClick={onRestart}>Play again</Button>
+        <Button
+          onClick={() => {
+            play("start");
+            onRestart();
+          }}
+        >
+          Play again
+        </Button>
         <Button variant="ghost" onClick={onSetup}>
           Settings
         </Button>

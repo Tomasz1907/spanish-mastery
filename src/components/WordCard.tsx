@@ -1,10 +1,11 @@
-import type { WordItem } from "../lib/vocab";
+import { splitArticle, type WordItem } from "../lib/vocab";
 
 type Props = {
   item: WordItem;
 };
 
 function WordCard({ item }: Props) {
+  const { article, base } = splitArticle(item);
   const hasDetails =
     item.example_es ||
     item.conjugation ||
@@ -16,10 +17,10 @@ function WordCard({ item }: Props) {
     <article className="card flex flex-col rounded-2xl border border-line bg-surface p-5 text-left transition hover:border-accent hover:shadow-card">
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-xl">
-          {item.article && (
-            <span className="font-normal opacity-60">{item.article} </span>
+          {article && (
+            <span className="font-normal opacity-60">{article} </span>
           )}
-          {item.word}
+          {base}
         </h3>
 
         <span className="shrink-0 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-strong">

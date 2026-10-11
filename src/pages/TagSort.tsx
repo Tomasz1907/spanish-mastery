@@ -12,16 +12,18 @@ import {
   Stat,
   type Mistake,
 } from "../components/GameUI";
+import Leaderboard from "../components/Leaderboard";
 import { langOptions } from "../lib/options";
 import {
   sample,
-  saveBest,
   shuffle,
   translationOf,
   useVocabulary,
   type Lang,
   type Word,
 } from "../lib/vocab";
+import { play } from "../lib/sound";
+import { useGameRecorder } from "../lib/progress";
 
 // tagi zbyt ogólne, żeby dało się je sensownie zgadywać
 const IGNORED_TAGS = ["basic", "grammar"];
@@ -89,7 +91,9 @@ function TagSort() {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [mistakes, setMistakes] = useState<Mistake[]>([]);
-  const [record, setRecord] = useState(false);
+  const [answers, setAnswers] = useState<{ id: string; ok: boolean }[]>([]);
+
+  const recorder = useGameRecorder();
 
   // tag -> słowa z tym tagiem
   const tagMap = new Map<string, Word[]>();
@@ -124,7 +128,7 @@ function TagSort() {
     setStreak(0);
     setBestStreak(0);
     setMistakes([]);
-    setRecord(false);
+    setAnswers([]);
     setPhase("play");
   };
 
@@ -134,12 +138,19 @@ function TagSort() {
     if (!round || picked) return;
 
     setPicked(word);
+    setAnswers((a) => [
+      ...a,
+      { id: round.answer.id, ok: word.id === round.answer.id },
+    ]);
 
     if (word.id === round.answer.id) {
+      // co trzecia dobra odpowiedź z rzędu = dźwięk serii
+      play((streak + 1) % 3 === 0 ? "combo" : "correct");
       setScore((s) => s + 1);
       setStreak(streak + 1);
       setBestStreak((b) => Math.max(b, streak + 1));
     } else {
+      play("wrong");
       setStreak(0);
       setMistakes((m) => [
         ...m,
@@ -154,15 +165,19 @@ function TagSort() {
 
   const next = () => {
     if (index + 1 >= rounds.length) {
-      setRecord(
-        rounds.length >= 10 &&
-          saveBest(
-            `tagsort:${rounds.length}`,
-            Math.round((score / rounds.length) * 100),
-          ),
-      );
+      recorder.save({
+        game: "tag-sort",
+        mode: String(rounds.length),
+        correct: score,
+        total: rounds.length,
+        bestValue: Math.round((score / rounds.length) * 100),
+        words: answers,
+        settings: { rounds: rounds.length, bestStreak },
+      });
+      play("finish");
       setPhase("done");
     } else {
+      play("click");
       setIndex((i) => i + 1);
       setPicked(null);
     }
@@ -289,7 +304,8 @@ function TagSort() {
       {phase === "done" && (
         <ResultScreen
           title="Sorting done! 🏷️"
-          record={record}
+          record={recorder.record}
+          save={recorder}
           stats={[
             { label: "Correct", value: `${score}/${rounds.length}` },
             { label: "Best streak", value: bestStreak },
@@ -299,6 +315,8 @@ function TagSort() {
           onSetup={() => setPhase("setup")}
         />
       )}
+
+      {phase !== "play" && <Leaderboard game="tag-sort" mode={String(count)} />}
     </section>
   );
 }
