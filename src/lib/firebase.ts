@@ -1,4 +1,5 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, type Auth } from "firebase/auth";
 
 // Wartości pochodzą z pliku .env.local (patrz .env.example).
 // Firebase Console -> Project settings -> Your apps -> Web app -> SDK config
@@ -20,8 +21,11 @@ export const app: FirebaseApp | null = isFirebaseConfigured
   ? initializeApp(firebaseConfig)
   : null;
 
-// Gdy będziesz potrzebować logowania lub bazy danych:
-// import { getAuth } from "firebase/auth";
+// AUTH - logowanie e-mail/hasło i Google
+export const auth: Auth | null = app ? getAuth(app) : null;
+
+export const googleProvider = new GoogleAuthProvider();
+
+// Gdy będziesz potrzebować bazy danych:
 // import { getFirestore } from "firebase/firestore";
-// export const auth = app ? getAuth(app) : null;
 // export const db = app ? getFirestore(app) : null;

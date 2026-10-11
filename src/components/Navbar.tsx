@@ -1,5 +1,9 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+
+import { useAuth } from "../context/AuthContext";
+import { isFirebaseConfigured } from "../lib/firebase";
+import { logout } from "../lib/auth";
 
 const links = [
   {
@@ -27,6 +31,57 @@ const links = [
     path: "/type-race",
   },
 ];
+
+function UserMenu() {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (!isFirebaseConfigured || loading) return null;
+
+  if (!user) {
+    return (
+      <Link
+        to="/login"
+        state={{ from: location.pathname }}
+        className="ml-2 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-black transition hover:brightness-110 active:scale-95"
+      >
+        Log in
+      </Link>
+    );
+  }
+
+  const name = user.displayName || user.email || "User";
+
+  return (
+    <div className="ml-2 flex items-center gap-2">
+      <span
+        title={user.email ?? undefined}
+        className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-3 text-sm font-medium text-heading"
+      >
+        {user.photoURL ? (
+          <img
+            src={user.photoURL}
+            alt=""
+            referrerPolicy="no-referrer"
+            className="h-7 w-7 rounded-full"
+          />
+        ) : (
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-xs font-bold text-black">
+            {name.charAt(0).toUpperCase()}
+          </span>
+        )}
+        <span className="max-w-32 truncate">{name}</span>
+      </span>
+
+      <button
+        onClick={() => logout()}
+        className="rounded-full px-3 py-1.5 text-sm font-medium text-body transition hover:bg-bad-soft hover:text-bad"
+      >
+        Log out
+      </button>
+    </div>
+  );
+}
 
 function Navbar() {
   const [dark, setDark] = useState(() => {
@@ -74,6 +129,8 @@ function Navbar() {
         >
           {dark ? "☀️" : "🌙"}
         </button>
+
+        <UserMenu />
       </div>
     </nav>
   );

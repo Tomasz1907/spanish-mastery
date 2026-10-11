@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 
-import Navbar from "./components/Navbar";
+import RequireAuth from "./components/RequireAuth";
+import AuthProvider from "./context/AuthProvider";
 
 import Home from "./pages/Home";
 import Quiz from "./pages/Quiz";
@@ -8,23 +9,32 @@ import Test from "./pages/Test";
 import MatchChaos from "./pages/MatchChaos";
 import TypeRace from "./pages/TypeRace";
 import TagSort from "./pages/TagSort";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
-
-      <main className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-6">
+    <AuthProvider>
+      <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/quiz" element={<Quiz />} />
-          <Route path="/test" element={<Test />} />
-          <Route path="/tag-sort" element={<TagSort />} />
-          <Route path="/match-chaos" element={<MatchChaos />} />
-          <Route path="/type-race" element={<TypeRace />} />
+          {/* PUBLICZNE */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* TYLKO DLA ZALOGOWANYCH */}
+          <Route element={<RequireAuth />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/quiz" element={<Quiz />} />
+            <Route path="/test" element={<Test />} />
+            <Route path="/tag-sort" element={<TagSort />} />
+            <Route path="/match-chaos" element={<MatchChaos />} />
+            <Route path="/type-race" element={<TypeRace />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </main>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
