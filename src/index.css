@@ -1,0 +1,197 @@
+@import "tailwindcss";
+
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #f5e7db;
+  --surface: #fffaf5;
+  --surface-2: #f9efe5;
+  --border: #e8d9cb;
+  --code-bg: #f4f3ec;
+
+  --accent: #f59e0b;
+  --accent-strong: #d97706;
+  --accent-bg: rgba(217, 119, 6, 0.1);
+  --accent-border: rgba(217, 119, 6, 0.5);
+
+  --good: #16a34a;
+  --good-bg: rgba(22, 163, 74, 0.12);
+  --bad: #dc2626;
+  --bad-bg: rgba(220, 38, 38, 0.12);
+
+  --social-bg: rgba(244, 243, 236, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+
+  color: var(--text);
+  background: var(--bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+.dark {
+  --text: #9ca3af;
+  --text-h: #f3f4f6;
+  --bg: #222327;
+  --surface: #2a2b31;
+  --surface-2: #31323a;
+  --border: #3a3c47;
+  --code-bg: #1f2028;
+
+  --accent: #f59e0b;
+  --accent-strong: #fbbf24;
+  --accent-bg: rgba(245, 158, 11, 0.15);
+  --accent-border: rgba(245, 158, 11, 0.5);
+
+  --good: #4ade80;
+  --good-bg: rgba(74, 222, 128, 0.15);
+  --bad: #f87171;
+  --bad-bg: rgba(248, 113, 113, 0.15);
+
+  --social-bg: rgba(47, 48, 58, 0.5);
+
+  --shadow:
+    rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+
+  color-scheme: dark;
+}
+
+/* zmienne jako kolory Tailwinda: bg-surface, text-heading, border-line itd. */
+@theme inline {
+  --color-page: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-body: var(--text);
+  --color-heading: var(--text-h);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-bg);
+  --color-accent-border: var(--accent-border);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-bg);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-bg);
+  --shadow-card: var(--shadow);
+}
+
+/* w warstwie base, żeby klasy Tailwinda mogły je nadpisywać */
+@layer base {
+  #root {
+    width: 1126px;
+    max-width: 100%;
+    margin: 0 auto;
+    text-align: center;
+
+    border-inline: 1px solid var(--border);
+
+    min-height: 100svh;
+
+    display: flex;
+    flex-direction: column;
+
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--heading);
+    font-weight: 600;
+    color: var(--text-h);
+  }
+
+  h1 {
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: -1.68px;
+
+    @media (max-width: 1024px) {
+      font-size: 36px;
+    }
+  }
+
+  h2 {
+    font-size: 24px;
+    line-height: 118%;
+    letter-spacing: -0.24px;
+
+    @media (max-width: 1024px) {
+      font-size: 20px;
+    }
+  }
+
+  p {
+    margin: 0;
+  }
+
+  * {
+    caret-color: transparent;
+  }
+
+  input,
+  textarea {
+    caret-color: var(--accent);
+  }
+
+  button:not(:disabled),
+  select {
+    cursor: pointer;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+.animate-pop {
+  animation: pop-in 0.25s ease-out;
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
