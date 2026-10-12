@@ -12,6 +12,7 @@ import {
   type Mistake,
 } from "../components/GameUI";
 import Leaderboard from "../components/Leaderboard";
+import SpeakButton from "../components/SpeakButton";
 import { categoryOptions, countOptions, langOptions } from "../lib/options";
 import {
   acceptedAnswers,
@@ -216,12 +217,19 @@ function Test() {
           </div>
           <ProgressBar value={index / questions.length} />
 
-          <p className="mt-8 text-sm uppercase tracking-wide">
+          <p className="mt-6 text-xs uppercase tracking-wide sm:mt-8 sm:text-sm">
             {word.category} · {word.part_of_speech}
           </p>
-          <h2 key={index} className="text-4xl my-6 animate-pop">
-            {promptOf(word)}
-          </h2>
+          <div
+            key={index}
+            className="my-5 flex items-center justify-center gap-3 animate-pop sm:my-6"
+          >
+            <h2 className="text-3xl sm:text-4xl">{promptOf(word)}</h2>
+            <SpeakButton
+              text={promptOf(word)}
+              lang={direction === "to-es" ? lang : "es"}
+            />
+          </div>
 
           <form onSubmit={submit} className="flex flex-col gap-4">
             <input
@@ -237,46 +245,52 @@ function Test() {
               autoComplete="off"
               autoCapitalize="off"
               spellCheck={false}
-              className={`w-full rounded-2xl border-2 px-5 py-4 text-center text-2xl text-heading outline-none transition ${resultStyle}`}
+              className={`w-full min-w-0 rounded-2xl border-2 px-4 py-3 text-center text-xl text-heading outline-none transition sm:px-5 sm:py-4 sm:text-2xl ${resultStyle}`}
             />
 
-            {direction === "to-es" && result === null && (
-              <div className="flex flex-wrap justify-center gap-2">
-                {["á", "é", "í", "ó", "ú", "ñ", "ü", "¿", "¡"].map((ch) => (
-                  <button
-                    key={ch}
-                    type="button"
-                    onClick={() => {
-                      setAnswer((a) => a + ch);
-                      inputRef.current?.focus();
-                    }}
-                    className="h-10 w-10 rounded-lg border border-line bg-surface-2 text-heading hover:border-accent"
-                  >
-                    {ch}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {result !== null && (
-              <div className="animate-pop">
-                <p className="text-lg font-semibold text-heading">
-                  {feedbackText[result]}
-                </p>
-                {result !== "correct" && (
-                  <p className="mt-1">
-                    Answer: <b className="text-good">{solutionOf(word)}</b>
+            {/* klawiatura akcentów i wynik dzielą jedno miejsce o stałej wysokości */}
+            <div className="flex min-h-[8.5rem] flex-col justify-center">
+              {result === null ? (
+                direction === "to-es" && (
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {["á", "é", "í", "ó", "ú", "ñ", "ü", "¿", "¡"].map((ch) => (
+                      <button
+                        key={ch}
+                        type="button"
+                        onClick={() => {
+                          setAnswer((a) => a + ch);
+                          inputRef.current?.focus();
+                        }}
+                        className="h-10 w-10 rounded-lg border border-line bg-surface-2 text-heading transition hover:-translate-y-0.5 hover:border-accent active:scale-90"
+                      >
+                        {ch}
+                      </button>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div className="animate-pop">
+                  <p className="text-lg font-semibold text-heading">
+                    {feedbackText[result]}
                   </p>
-                )}
-                {word.example_es && (
-                  <p className="mt-3 text-sm">
-                    🇪🇸 <i>{word.example_es}</i>
-                  </p>
-                )}
-              </div>
-            )}
+                  {result !== "correct" && (
+                    <p className="mt-1">
+                      Answer: <b className="text-good">{solutionOf(word)}</b>
+                    </p>
+                  )}
+                  {word.example_es && (
+                    <div className="mt-3 flex items-start justify-center gap-2 text-sm">
+                      <p>
+                        🇪🇸 <i>{word.example_es}</i>
+                      </p>
+                      <SpeakButton text={word.example_es} size="sm" />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-            <div className="flex justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               {result === null ? (
                 <>
                   <Button type="submit">Check</Button>
@@ -298,6 +312,7 @@ function Test() {
         <ResultScreen
           title={score === questions.length ? "Perfect! 🎉" : "Test finished"}
           record={recorder.record}
+          celebrate={score === questions.length}
           save={recorder}
           stats={[
             { label: "Correct", value: `${score}/${questions.length}` },

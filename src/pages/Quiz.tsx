@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 
 import {
   Button,
@@ -12,6 +12,7 @@ import {
   type Mistake,
 } from "../components/GameUI";
 import Leaderboard from "../components/Leaderboard";
+import SpeakButton from "../components/SpeakButton";
 import { categoryOptions, countOptions, langOptions } from "../lib/options";
 import {
   exampleOf,
@@ -219,18 +220,26 @@ function Quiz() {
           <ProgressBar value={index / questions.length} />
 
           <div key={index} className="animate-pop">
-            <p className="mt-8 text-sm uppercase tracking-wide">
+            <p className="mt-6 text-xs uppercase tracking-wide sm:mt-8 sm:text-sm">
               {question.word.category} · {question.word.part_of_speech}
             </p>
-            <h2 className="text-4xl my-6">{question.prompt}</h2>
+            <div className="my-5 flex items-center justify-center gap-3 sm:my-6">
+              <h2 className="text-3xl sm:text-4xl">{question.prompt}</h2>
+              <SpeakButton
+                text={question.prompt}
+                lang={direction === "from-es" ? "es" : lang}
+              />
+            </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
               {question.options.map((option, i) => {
-                let style = "border-line bg-surface-2 hover:border-accent";
+                let style =
+                  "border-line bg-surface-2 hover:border-accent hover:-translate-y-0.5";
 
                 if (picked !== null) {
                   if (option === question.correct) {
-                    style = "border-good bg-good-soft text-heading";
+                    style =
+                      "border-good bg-good-soft text-heading animate-correct";
                   } else if (option === picked) {
                     style = "border-bad bg-bad-soft animate-shake";
                   } else {
@@ -243,33 +252,40 @@ function Quiz() {
                     key={option}
                     onClick={() => choose(option)}
                     disabled={picked !== null}
-                    className={`flex items-center gap-3 rounded-2xl border-2 px-5 py-4 text-left text-lg transition ${style}`}
+                    style={{ "--i": i } as CSSProperties}
+                    className={`flex min-w-0 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-base transition sm:px-5 ${picked === null ? "animate-rise" : ""} sm:py-4 sm:text-lg ${style}`}
                   >
                     <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface text-sm font-bold">
                       {i + 1}
                     </span>
-                    {option}
+                    <span className="min-w-0">{option}</span>
                   </button>
                 );
               })}
             </div>
 
-            {picked !== null && (
-              <div className="mt-6 animate-pop">
-                {question.word.example_es && (
-                  <p className="text-sm">
+            {/* miejsce na przykład i przycisk jest zarezerwowane od początku,
+                więc okienko nie zmienia wysokości po odpowiedzi */}
+            <div
+              className={`mt-5 sm:mt-6 ${picked === null ? "invisible" : "animate-pop"}`}
+              aria-hidden={picked === null}
+            >
+              {question.word.example_es && (
+                <div className="flex items-start justify-center gap-2 text-sm">
+                  <p>
                     🇪🇸 <i>{question.word.example_es}</i>
                     <br />
                     {lang === "pl" ? "🇵🇱" : "🇬🇧"}{" "}
                     {exampleOf(question.word, lang)}
                   </p>
-                )}
+                  <SpeakButton text={question.word.example_es} size="sm" />
+                </div>
+              )}
 
-                <Button className="mt-5" onClick={next}>
-                  {index + 1 >= questions.length ? "See results" : "Next →"}
-                </Button>
-              </div>
-            )}
+              <Button className="mt-4 w-full sm:mt-5 sm:w-auto" onClick={next}>
+                {index + 1 >= questions.length ? "See results" : "Next →"}
+              </Button>
+            </div>
           </div>
         </Panel>
       )}
@@ -278,6 +294,7 @@ function Quiz() {
         <ResultScreen
           title={score === questions.length ? "Perfect! 🎉" : "Quiz finished"}
           record={recorder.record}
+          celebrate={score === questions.length}
           save={recorder}
           stats={[
             { label: "Correct", value: `${score}/${questions.length}` },

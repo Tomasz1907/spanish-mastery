@@ -105,6 +105,10 @@
 
     border-inline: 1px solid var(--border);
 
+    @media (max-width: 640px) {
+      border-inline: none;
+    }
+
     min-height: 100svh;
 
     display: flex;
@@ -115,6 +119,9 @@
 
   body {
     margin: 0;
+    /* długie słowa łamią się zamiast rozpychać układ */
+    overflow-wrap: break-word;
+    -webkit-tap-highlight-color: transparent;
     background: var(--bg);
     color: var(--text);
 
@@ -131,24 +138,17 @@
     color: var(--text-h);
   }
 
+  /* płynne rozmiary - od telefonu do dużego ekranu */
   h1 {
-    font-size: 56px;
+    font-size: clamp(1.9rem, 1.2rem + 3.2vw, 3.5rem);
     line-height: 1.1;
-    letter-spacing: -1.68px;
-
-    @media (max-width: 1024px) {
-      font-size: 36px;
-    }
+    letter-spacing: -0.03em;
   }
 
   h2 {
-    font-size: 24px;
-    line-height: 118%;
-    letter-spacing: -0.24px;
-
-    @media (max-width: 1024px) {
-      font-size: 20px;
-    }
+    font-size: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
+    line-height: 1.18;
+    letter-spacing: -0.01em;
   }
 
   p {
@@ -216,10 +216,181 @@
   animation: float 6s ease-in-out infinite;
 }
 
+/* ── ANIMACJE ─────────────────────────────────────────────────────────── */
+
+/* wejście strony przy zmianie trasy */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-page {
+  animation: page-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* kaskadowe pojawianie się: style={{ "--i": index }} */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+/* dobra odpowiedź: krótki „puls” z poświatą */
+@keyframes correct-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 var(--good-bg);
+  }
+  40% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 10px var(--good-bg);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.animate-correct {
+  animation: correct-pulse 0.5s ease-out;
+}
+
+/* menu wysuwane z prawej */
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-drawer {
+  animation: drawer-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade {
+  animation: fade-in 0.25s ease-out both;
+}
+
+/* gradient przesuwający się w tekście nagłówka */
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.animate-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 6s linear infinite;
+}
+
+/* pulsujący głośnik podczas czytania */
+@keyframes speaking {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--accent-border);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.animate-speaking {
+  animation: speaking 1s ease-in-out infinite;
+}
+
+/* fiszka obracana w 3D */
+.flip-card {
+  perspective: 1200px;
+}
+
+.flip-inner {
+  display: grid;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transform-style: preserve-3d;
+}
+
+.flip-inner > * {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-inner > .flip-back {
+  transform: rotateY(180deg);
+}
+
+.flip-card.flipped .flip-inner {
+  transform: rotateY(180deg);
+}
+
+/* konfetti przy rekordzie */
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), 110vh) rotate(var(--rot));
+  }
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confetti-fall var(--dur) cubic-bezier(0.25, 0.6, 0.4, 1)
+    var(--delay) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-float,
   .animate-pop,
-  .animate-shake {
+  .animate-shake,
+  .animate-page,
+  .animate-rise,
+  .animate-correct,
+  .animate-drawer,
+  .animate-fade,
+  .animate-shimmer,
+  .animate-speaking {
     animation: none;
+  }
+
+  .flip-inner {
+    transition: none;
+  }
+
+  .confetti-piece {
+    display: none;
   }
 }

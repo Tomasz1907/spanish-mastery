@@ -32,8 +32,11 @@ function RequireAuth() {
     <>
       <Navbar />
 
-      <main className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-6">
-        <Outlet />
+      <main className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-6 sm:py-6">
+        {/* klucz = adres, więc każda podstrona wjeżdża z animacją */}
+        <div key={location.pathname} className="animate-page">
+          <Outlet />
+        </div>
       </main>
     </>
   );

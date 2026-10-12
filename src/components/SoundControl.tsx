@@ -27,15 +27,77 @@ function SpeakerIcon({ level }: { level: 0 | 1 | 2 }) {
   );
 }
 
+// Zawartość ustawień dźwięku - w okienku na komputerze i w menu na telefonie
+export function SoundSettings() {
+  const { volume, muted } = useSoundSettings();
+
+  const silent = muted || volume === 0;
+  const percent = Math.round(volume * 100);
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-sm font-semibold text-heading">
+          Sound effects
+        </span>
+        <button
+          onClick={() => {
+            const wasSilent = silent;
+            toggleMute();
+            if (wasSilent) play("correct");
+          }}
+          role="switch"
+          aria-checked={!silent}
+          aria-label="Sound effects on"
+          className={`relative h-6 w-11 rounded-full transition ${
+            silent ? "bg-surface-2 ring-1 ring-line" : "bg-accent"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+              silent ? "left-0.5" : "left-[22px]"
+            }`}
+          />
+        </button>
+      </div>
+
+      <label className="flex items-center gap-3">
+        <span className="text-body">
+          <SpeakerIcon level={1} />
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={silent ? 0 : percent}
+          onChange={(e) => setVolume(Number(e.target.value) / 100)}
+          // podgląd głośności po puszczeniu suwaka
+          onPointerUp={() => play("correct")}
+          onKeyUp={() => play("click")}
+          aria-label="Volume"
+          className="h-2 flex-1 cursor-pointer accent-[var(--accent)]"
+        />
+        <span className="w-9 text-right text-xs tabular-nums">
+          {silent ? 0 : percent}%
+        </span>
+      </label>
+
+      <p className="mt-3 text-xs">
+        Short sounds for answers, combos and records. Saved on this device.
+      </p>
+    </div>
+  );
+}
+
 // Przycisk głośnika w nawigacji z panelem: suwak głośności + wyciszenie
-function SoundControl() {
+export default function SoundControl() {
   const { volume, muted } = useSoundSettings();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const silent = muted || volume === 0;
   const level: 0 | 1 | 2 = silent ? 0 : volume < 0.5 ? 1 : 2;
-  const percent = Math.round(volume * 100);
 
   // zamknij po kliknięciu poza panelem albo Escape
   useEffect(() => {
@@ -80,60 +142,9 @@ function SoundControl() {
           aria-label="Sound settings"
           className="absolute right-0 top-full z-20 mt-2 w-[320px] rounded-2xl border border-line bg-surface p-4 text-left shadow-card animate-pop"
         >
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-heading">
-              Sound effects
-            </span>
-            <button
-              onClick={() => {
-                const wasSilent = silent;
-                toggleMute();
-                if (wasSilent) play("correct");
-              }}
-              role="switch"
-              aria-checked={!silent}
-              aria-label="Sound effects on"
-              className={`relative h-6 w-11 rounded-full transition ${
-                silent ? "bg-surface-2 ring-1 ring-line" : "bg-accent"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
-                  silent ? "left-0.5" : "left-[22px]"
-                }`}
-              />
-            </button>
-          </div>
-
-          <label className="flex items-center gap-3">
-            <span className="text-body">
-              <SpeakerIcon level={1} />
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={silent ? 0 : percent}
-              onChange={(e) => setVolume(Number(e.target.value) / 100)}
-              // podgląd głośności po puszczeniu suwaka
-              onPointerUp={() => play("correct")}
-              onKeyUp={() => play("click")}
-              aria-label="Volume"
-              className="h-2 flex-1 cursor-pointer accent-[var(--accent)]"
-            />
-            <span className="w-9 text-right text-xs tabular-nums">
-              {silent ? 0 : percent}%
-            </span>
-          </label>
-
-          <p className="mt-3 text-xs">
-            Short sounds for answers, combos and records. Saved on this device.
-          </p>
+          <SoundSettings />
         </div>
       )}
     </div>
   );
 }
-
-export default SoundControl;

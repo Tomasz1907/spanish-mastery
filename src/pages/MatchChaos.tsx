@@ -232,14 +232,27 @@ function MatchChaos() {
     else if (isWrong) style = "border-bad bg-bad-soft animate-shake";
     else if (isSelected) style = "border-accent bg-accent-soft scale-[1.03]";
 
+    const text = side === "left" ? word.word : translationOf(word, lang);
+
+    // dłuższy tekst = mniejsza czcionka, żeby zawsze mieścił się na karcie
+    const size =
+      text.length > 24
+        ? "text-xs sm:text-sm"
+        : text.length > 14
+          ? "text-sm sm:text-base"
+          : "text-base sm:text-lg";
+
     return (
       <button
         key={key}
         onClick={() => pick(side, word)}
         disabled={isMatched}
-        className={`min-h-20 rounded-2xl border-2 px-4 py-3 text-lg font-medium text-heading transition-all duration-200 animate-pop ${style}`}
+        lang={side === "left" ? "es" : lang}
+        className={`flex h-[4.5rem] min-w-0 items-center justify-center rounded-2xl border-2 px-2 py-2 font-medium leading-tight text-heading transition-all duration-200 animate-pop sm:h-20 sm:px-4 ${size} ${style}`}
       >
-        {side === "left" ? word.word : translationOf(word, lang)}
+        <span className="line-clamp-3 hyphens-auto [overflow-wrap:anywhere]">
+          {text}
+        </span>
       </button>
     );
   };
@@ -292,13 +305,15 @@ function MatchChaos() {
           </div>
           <ProgressBar value={remaining / (duration * 1000)} />
 
-          <div className="grid grid-cols-2 gap-3 sm:gap-6 mt-8">
-            <div className="flex flex-col gap-3">
-              <p className="text-sm uppercase tracking-wide">🇪🇸 Spanish</p>
+          <div className="mt-6 grid grid-cols-2 gap-2 sm:mt-8 sm:gap-6">
+            <div className="flex min-w-0 flex-col gap-2 sm:gap-3">
+              <p className="text-xs uppercase tracking-wide sm:text-sm">
+                🇪🇸 Spanish
+              </p>
               {board.left.map((w) => tile("left", w))}
             </div>
-            <div className="flex flex-col gap-3">
-              <p className="text-sm uppercase tracking-wide">
+            <div className="flex min-w-0 flex-col gap-2 sm:gap-3">
+              <p className="text-xs uppercase tracking-wide sm:text-sm">
                 {lang === "pl" ? "🇵🇱 Polish" : "🇬🇧 English"}
               </p>
               {board.right.map((w) => tile("right", w))}

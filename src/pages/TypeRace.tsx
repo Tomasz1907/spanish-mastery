@@ -11,6 +11,7 @@ import {
   Stat,
 } from "../components/GameUI";
 import Leaderboard from "../components/Leaderboard";
+import SpeakButton from "../components/SpeakButton";
 import { categoryOptions, langOptions } from "../lib/options";
 import {
   exampleOf,
@@ -252,14 +253,17 @@ function TypeRace() {
           </div>
           <ProgressBar value={doneChars / totalChars} />
 
-          <p className="mt-6 text-sm">
-            Sentence {index + 1} / {sentences.length}
-          </p>
+          <div className="mt-5 flex items-center justify-between gap-2 sm:mt-6">
+            <p className="text-sm">
+              Sentence {index + 1} / {sentences.length}
+            </p>
+            <SpeakButton text={sentence.example_es ?? ""} size="sm" />
+          </div>
 
           <p
             key={index}
             onClick={() => inputRef.current?.focus()}
-            className="mt-4 text-left text-2xl sm:text-3xl leading-relaxed font-mono animate-pop cursor-text"
+            className="mt-3 cursor-text text-left font-mono text-lg leading-relaxed animate-pop sm:mt-4 sm:text-2xl md:text-3xl"
           >
             {[...target].map((ch, i) => {
               let style = "opacity-50";
@@ -296,7 +300,7 @@ function TypeRace() {
             autoCorrect="off"
             spellCheck={false}
             placeholder="Start typing..."
-            className="mt-6 w-full rounded-2xl border-2 border-line bg-surface-2 px-5 py-4 text-xl font-mono text-heading outline-none focus:border-accent"
+            className="mt-5 w-full min-w-0 rounded-2xl border-2 border-line bg-surface-2 px-4 py-3 font-mono text-base text-heading outline-none transition focus:border-accent sm:mt-6 sm:px-5 sm:py-4 sm:text-xl"
           />
         </Panel>
       )}

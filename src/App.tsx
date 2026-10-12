@@ -12,6 +12,7 @@ import TagSort from "./pages/TagSort";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import Learn from "./pages/Learn";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           {/* TYLKO DLA ZALOGOWANYCH */}
           <Route element={<RequireAuth />}>
             <Route path="/" element={<Home />} />
+            <Route path="/learn" element={<Learn />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/test" element={<Test />} />
             <Route path="/tag-sort" element={<TagSort />} />

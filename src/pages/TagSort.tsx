@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
 import {
   Button,
@@ -239,22 +239,26 @@ function TagSort() {
           <ProgressBar value={index / rounds.length} />
 
           <div key={index} className="animate-pop">
-            <div className="mt-8 inline-flex items-center gap-3 rounded-full border-2 border-accent bg-accent-soft px-6 py-3">
-              <span className="text-3xl">{TAG_ICONS[round.tag] ?? "🏷️"}</span>
-              <span className="text-2xl font-bold text-heading">
+            <div className="mt-6 inline-flex max-w-full items-center gap-3 rounded-full border-2 border-accent bg-accent-soft px-5 py-2.5 sm:mt-8 sm:px-6 sm:py-3">
+              <span className="text-2xl sm:text-3xl">
+                {TAG_ICONS[round.tag] ?? "🏷️"}
+              </span>
+              <span className="text-xl font-bold text-heading sm:text-2xl">
                 {prettyTag(round.tag)}
               </span>
             </div>
 
-            <p className="mt-4 mb-6">Which word belongs to this topic?</p>
+            <p className="mt-4 mb-5 sm:mb-6">
+              Which word belongs to this topic?
+            </p>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              {round.options.map((word) => {
-                let style = "border-line bg-surface-2 hover:border-accent";
+            <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+              {round.options.map((word, i) => {
+                let style = `border-line bg-surface-2 hover:border-accent hover:-translate-y-0.5 animate-rise`;
 
                 if (picked) {
                   if (word.id === round.answer.id) {
-                    style = "border-good bg-good-soft";
+                    style = "border-good bg-good-soft animate-correct";
                   } else if (word.id === picked.id) {
                     style = "border-bad bg-bad-soft animate-shake";
                   } else {
@@ -267,32 +271,39 @@ function TagSort() {
                     key={word.id}
                     onClick={() => choose(word)}
                     disabled={!!picked}
-                    className={`rounded-2xl border-2 px-5 py-4 transition ${style}`}
+                    style={{ "--i": i } as CSSProperties}
+                    className={`min-w-0 rounded-2xl border-2 px-4 py-3 transition sm:px-5 sm:py-4 ${style}`}
                   >
-                    <span className="block text-xl font-semibold text-heading">
+                    <span className="block text-lg font-semibold text-heading sm:text-xl">
                       {word.word}
                     </span>
-                    {(picked || hints === "on") && (
-                      <span className="block text-sm mt-1">
-                        {translationOf(word, lang)}
-                        {picked && (
-                          <span className="opacity-70">
-                            {" "}
-                            · {word.tags.map(prettyTag).join(", ")}
-                          </span>
-                        )}
-                      </span>
-                    )}
+                    {/* tłumaczenie zajmuje miejsce od początku (niewidoczne),
+                        żeby przyciski nie zmieniały wysokości po odpowiedzi */}
+                    <span
+                      className={`mt-1 block text-sm ${
+                        picked || hints === "on" ? "" : "invisible"
+                      }`}
+                    >
+                      {translationOf(word, lang)}
+                      {picked && (
+                        <span className="opacity-70">
+                          {" "}
+                          · {word.tags.map(prettyTag).join(", ")}
+                        </span>
+                      )}
+                    </span>
                   </button>
                 );
               })}
             </div>
 
-            {picked && (
-              <Button className="mt-6 animate-pop" onClick={next}>
-                {index + 1 >= rounds.length ? "See results" : "Next →"}
-              </Button>
-            )}
+            <Button
+              className={`mt-5 w-full sm:mt-6 sm:w-auto ${picked ? "animate-pop" : "invisible"}`}
+              onClick={next}
+              aria-hidden={!picked}
+            >
+              {index + 1 >= rounds.length ? "See results" : "Next →"}
+            </Button>
           </div>
 
           <div className="flex justify-center gap-3 mt-6">
@@ -305,6 +316,7 @@ function TagSort() {
         <ResultScreen
           title="Sorting done! 🏷️"
           record={recorder.record}
+          celebrate={score === rounds.length}
           save={recorder}
           stats={[
             { label: "Correct", value: `${score}/${rounds.length}` },

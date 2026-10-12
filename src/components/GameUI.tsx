@@ -1,7 +1,13 @@
-import { useEffect, type ButtonHTMLAttributes, type ReactNode } from "react";
+import {
+  useEffect,
+  type ButtonHTMLAttributes,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { Link } from "react-router-dom";
 
 import { play } from "../lib/sound";
+import Confetti from "./Confetti";
 
 // BUTTON
 
@@ -21,7 +27,7 @@ export function Button({
 
   return (
     <button
-      className={`rounded-xl px-6 py-3 font-semibold transition active:scale-95 disabled:opacity-50 ${styles} ${className}`}
+      className={`rounded-xl px-5 py-3 font-semibold transition hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:pointer-events-none disabled:opacity-50 sm:px-6 ${styles} ${className}`}
       {...props}
     />
   );
@@ -38,7 +44,7 @@ export function Panel({
 }) {
   return (
     <div
-      className={`rounded-3xl border border-line bg-surface p-6 sm:p-8 shadow-card ${className}`}
+      className={`rounded-3xl border border-line bg-surface p-4 shadow-card sm:p-8 ${className}`}
     >
       {children}
     </div>
@@ -55,10 +61,14 @@ export function PageHeader({
   description: string;
 }) {
   return (
-    <header className="mb-8">
-      <div className="text-5xl mb-3">{icon}</div>
-      <h1 className="mb-3">{title}</h1>
-      <p className="max-w-xl mx-auto">{description}</p>
+    <header className="mb-6 sm:mb-8">
+      <div className="mb-2 inline-block text-4xl animate-float sm:mb-3 sm:text-5xl">
+        {icon}
+      </div>
+      <h1 className="mb-2 sm:mb-3">{title}</h1>
+      <p className="mx-auto max-w-xl px-2 text-sm sm:text-base">
+        {description}
+      </p>
     </header>
   );
 }
@@ -73,8 +83,8 @@ export function Loading({ error }: { error?: string | null }) {
 
 export function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-2xl bg-surface-2 px-4 py-3 min-w-24">
-      <div className="text-2xl font-bold text-heading tabular-nums">
+    <div className="min-w-20 rounded-2xl bg-surface-2 px-3 py-2 sm:min-w-24 sm:px-4 sm:py-3">
+      <div className="text-xl font-bold text-heading tabular-nums sm:text-2xl">
         {value}
       </div>
       <div className="text-xs uppercase tracking-wide">{label}</div>
@@ -191,6 +201,7 @@ export function ResultScreen({
   title,
   stats,
   record,
+  celebrate = false,
   save,
   mistakes = [],
   onRestart,
@@ -199,6 +210,8 @@ export function ResultScreen({
   title: string;
   stats: { label: string; value: ReactNode }[];
   record?: boolean;
+  // konfetti także bez rekordu, np. przy bezbłędnym wyniku
+  celebrate?: boolean;
   save?: {
     status: "idle" | "saving" | "saved" | "error";
     xp: number;
@@ -221,7 +234,8 @@ export function ResultScreen({
 
   return (
     <Panel className="max-w-2xl mx-auto animate-pop">
-      <h2 className="text-3xl mb-2">{title}</h2>
+      {(record || celebrate) && <Confetti />}
+      <h2 className="mb-2 text-2xl sm:text-3xl">{title}</h2>
 
       {record && (
         <p className="mb-4 font-semibold text-accent-strong">
@@ -268,8 +282,14 @@ export function ResultScreen({
       )}
 
       <div className="flex flex-wrap justify-center gap-3 my-6">
-        {stats.map((s) => (
-          <Stat key={s.label} label={s.label} value={s.value} />
+        {stats.map((s, i) => (
+          <div
+            key={s.label}
+            className="animate-rise"
+            style={{ "--i": i + 2 } as CSSProperties}
+          >
+            <Stat label={s.label} value={s.value} />
+          </div>
         ))}
       </div>
 

@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { Panel, ProgressBar } from "../components/GameUI";
@@ -20,7 +20,13 @@ import {
   type UserProfile,
   type WordProgress,
 } from "../lib/progress";
-import { splitArticle, useVocabulary, type Word } from "../lib/vocab";
+import SpeakButton from "../components/SpeakButton";
+import {
+  splitArticle,
+  useVocabulary,
+  withArticle,
+  type Word,
+} from "../lib/vocab";
 
 const ACTIVITY_DAYS = 30;
 
@@ -354,16 +360,26 @@ function GameBreakdown({ profile }: { profile: UserProfile | null }) {
                   </span>
                 </span>
 
-                <span className="text-right">
-                  <span className="block font-bold text-heading tabular-nums">
-                    {best ? `${best[1]}${game.bestUnit}` : "—"}
+                {id === "learn" ? (
+                  // Learn nie ma rekordów - pokazujemy liczbę wyuczonych słów
+                  <span className="text-right">
+                    <span className="block font-bold text-heading tabular-nums">
+                      {counter?.correct ?? 0}
+                    </span>
+                    <span className="block text-xs">words learned</span>
                   </span>
-                  <span className="block text-xs">
-                    {best
-                      ? `🏆 ${formatMode(id, best[0].slice(id.length + 1))}`
-                      : "no record"}
+                ) : (
+                  <span className="text-right">
+                    <span className="block font-bold text-heading tabular-nums">
+                      {best ? `${best[1]}${game.bestUnit}` : "—"}
+                    </span>
+                    <span className="block text-xs">
+                      {best
+                        ? `🏆 ${formatMode(id, best[0].slice(id.length + 1))}`
+                        : "no record"}
+                    </span>
                   </span>
-                </span>
+                )}
               </Link>
             </li>
           );
@@ -521,7 +537,17 @@ function WordsToReview({
 
   return (
     <Panel>
-      <SectionTitle>Words to review</SectionTitle>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-xl">Words to review</h2>
+        {hardest.length > 0 && (
+          <Link
+            to={`/learn?words=${hardest.map((h) => h.word.id).join(",")}`}
+            className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-black shadow-card transition hover:-translate-y-0.5 hover:brightness-110"
+          >
+            📖 Review all ({hardest.length})
+          </Link>
+        )}
+      </div>
 
       {hardest.length === 0 ? (
         <p className="text-sm">
@@ -530,12 +556,13 @@ function WordsToReview({
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {hardest.map(({ word, c, w }) => (
+          {hardest.map(({ word, c, w }, i) => (
             <li
               key={word.id}
-              className="flex items-center gap-3 rounded-xl bg-surface-2 px-4 py-2.5"
+              style={{ "--i": i } as CSSProperties}
+              className="flex items-center gap-2 rounded-xl bg-surface-2 py-2 pl-3 pr-2 animate-rise sm:gap-3 sm:pl-4"
             >
-              <span className="flex-1">
+              <span className="min-w-0 flex-1">
                 <span className="block font-semibold text-heading">
                   {splitArticle(word).article && (
                     <span className="font-normal opacity-60">
@@ -552,6 +579,15 @@ function WordsToReview({
                 <span className="text-good">✓ {c}</span>{" "}
                 <span className="text-bad">✗ {w}</span>
               </span>
+              <SpeakButton text={withArticle(word)} size="sm" />
+              <Link
+                to={`/learn?words=${word.id}`}
+                aria-label={`Learn ${withArticle(word)}`}
+                title="Learn this word"
+                className="shrink-0 rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold text-heading transition hover:border-accent hover:bg-accent-soft"
+              >
+                Learn
+              </Link>
             </li>
           ))}
         </ul>

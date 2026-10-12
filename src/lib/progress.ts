@@ -23,12 +23,14 @@ import { db } from "./firebase";
 // users/{uid}/progress/words   - ile razy każde słowo było dobrze / źle
 // leaderboards/{gra:tryb}/scores/{id}  - publiczny ranking (każda zaliczona gra osobno)
 
-export type GameId = "quiz" | "test" | "match-chaos" | "tag-sort" | "type-race";
+export type GameId =
+  "learn" | "quiz" | "test" | "match-chaos" | "tag-sort" | "type-race";
 
 export const GAMES: Record<
   GameId,
   { name: string; icon: string; path: string; bestUnit: string }
 > = {
+  learn: { name: "Learn", icon: "📖", path: "/learn", bestUnit: " words" },
   quiz: { name: "Quiz", icon: "🎯", path: "/quiz", bestUnit: "%" },
   test: { name: "Test", icon: "✍️", path: "/test", bestUnit: "%" },
   "match-chaos": {
@@ -419,6 +421,9 @@ export function formatMode(game: GameId, mode: string): string {
       const accents = a === "strict" ? "Strict" : "Lenient";
       return b ? `${accents} · ${b} sentences` : accents;
     }
+    // tryb: liczba słów w lekcji / "review"
+    case "learn":
+      return a === "review" ? "Review" : `${a} words`;
   }
 }
 
