@@ -12,9 +12,9 @@ const links = [
   { name: "Learn", path: "/learn", icon: "📖" },
   { name: "Quiz", path: "/quiz", icon: "🎯" },
   { name: "Test", path: "/test", icon: "✍️" },
-  { name: "Tag Map", path: "/tags", icon: "🕸️" },
   { name: "Match Chaos", path: "/match-chaos", icon: "⚡" },
   { name: "Type Race", path: "/type-race", icon: "🏎️" },
+  { name: "Tag Map", path: "/tags", icon: "🕸️" },
 ];
 
 function Avatar({ user, size = "sm" }: { user: User; size?: "sm" | "lg" }) {

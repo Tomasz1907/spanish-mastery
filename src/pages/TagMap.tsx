@@ -90,32 +90,50 @@ type SimLink = SimulationLinkDatum<SimNode> & { weight: number };
 // układ siłowy liczony raz - powiązane tagi przyciągają się, wszystkie się odpychają
 function computeLayout(nodes: TagNode[], links: TagLink[]) {
   const simNodes: SimNode[] = nodes.map((n) => ({ id: n.id, r: n.r }));
-  const simLinks: SimLink[] = links
-    .filter((l) => l.weight >= 2)
-    .map((l) => ({ source: l.source, target: l.target, weight: l.weight }));
-  const maxW = Math.max(1, ...simLinks.map((l) => l.weight));
+  const count = new Map(nodes.map((n) => [n.id, n.count]));
+
+  // siła powiązania względem wielkości obu tagów (podobieństwo kosinusowe),
+  // żeby ogólne tagi typu "description" nie ściągały wszystkiego do środka
+  const assoc = (l: TagLink) =>
+    l.weight /
+    Math.sqrt((count.get(l.source) ?? 1) * (count.get(l.target) ?? 1));
+
+  // do układu bierzemy tylko 3 najsilniejsze powiązania każdego tagu
+  const strongest = new Set<TagLink>();
+  for (const n of nodes) {
+    links
+      .filter((l) => l.weight >= 2 && (l.source === n.id || l.target === n.id))
+      .sort((a, b) => assoc(b) - assoc(a))
+      .slice(0, 3)
+      .forEach((l) => strongest.add(l));
+  }
+  const simLinks: SimLink[] = [...strongest].map((l) => ({
+    source: l.source,
+    target: l.target,
+    weight: assoc(l),
+  }));
+  const maxA = Math.max(...simLinks.map((l) => l.weight), 0.01);
 
   const sim = forceSimulation(simNodes)
     .force(
       "link",
       forceLink<SimNode, SimLink>(simLinks)
         .id((d) => d.id)
-        .distance((l) => 80 + 140 * (1 - l.weight / maxW))
-        .strength((l) => 0.04 + 0.45 * (l.weight / maxW)),
+        .distance((l) => 70 + 110 * (1 - l.weight / maxA))
+        .strength((l) => 0.25 + 0.6 * (l.weight / maxA)),
     )
     .force(
       "charge",
-      forceManyBody<SimNode>().strength((d) => -140 - d.r * 9),
+      forceManyBody<SimNode>()
+        .strength((d) => -320 - d.r * 10)
+        .distanceMax(900),
     )
-    .force(
-      "collide",
-      forceCollide<SimNode>((d) => d.r + 16),
-    )
-    .force("x", forceX(0).strength(0.05))
-    .force("y", forceY(0).strength(0.05))
+    .force("collide", forceCollide<SimNode>((d) => d.r + 30).strength(1))
+    .force("x", forceX(0).strength(0.015))
+    .force("y", forceY(0).strength(0.015))
     .stop();
 
-  for (let i = 0; i < 400; i++) sim.tick();
+  for (let i = 0; i < 500; i++) sim.tick();
 
   const out: Record<string, Point> = {};
   for (const n of simNodes) out[n.id] = { x: n.x ?? 0, y: n.y ?? 0 };
@@ -243,7 +261,8 @@ function TagMap() {
     x: number;
     y: number;
   } | null>(null);
-  const [minWeight, setMinWeight] = useState(5);
+  // ile linii do najbliższych powiązanych tagów pokazujemy przy każdym węźle
+  const [perNode, setPerNode] = useState(1);
   const [hidden, setHidden] = useState<TagGroup[]>([]);
   const [showAllWords, setShowAllWords] = useState(false);
 
@@ -267,6 +286,29 @@ function TagMap() {
     ro.observe(el);
     return () => ro.disconnect();
   }, [loading]);
+
+  // szkielet mapy: każdy tag łączy się tylko z najbliższymi (na mapie) powiązanymi tagami
+  const backbone = useMemo(() => {
+    const adj = new Map<string, TagLink[]>();
+    for (const l of graph.links) {
+      if (l.weight < 2) continue;
+      adj.set(l.source, [...(adj.get(l.source) ?? []), l]);
+      adj.set(l.target, [...(adj.get(l.target) ?? []), l]);
+    }
+    const keep = new Set<TagLink>();
+    for (const [id, ls] of adj) {
+      const p = layout[id];
+      const dist = (l: TagLink) => {
+        const o = layout[l.source === id ? l.target : l.source];
+        return Math.hypot(o.x - p.x, o.y - p.y);
+      };
+      [...ls]
+        .sort((a, b) => dist(a) - dist(b))
+        .slice(0, perNode)
+        .forEach((l) => keep.add(l));
+    }
+    return [...keep];
+  }, [graph, layout, perNode]);
 
   const pos = (id: string) => moved[id] ?? layout[id];
   const visibleNodes = graph.nodes.filter((n) => !hidden.includes(n.group));
@@ -378,12 +420,18 @@ function TagMap() {
   // ── SĄSIEDZTWO WYBRANEGO TAGU ──────────────────────────────────────
 
   const visibleIds = new Set(visibleNodes.map((n) => n.id));
-  const visibleLinks = graph.links.filter(
-    (l) =>
-      l.weight >= minWeight &&
-      visibleIds.has(l.source) &&
-      visibleIds.has(l.target),
-  );
+  const isVisible = (l: TagLink) =>
+    visibleIds.has(l.source) && visibleIds.has(l.target);
+  const touchesSelected = (l: TagLink) =>
+    !!selected && (l.source === selected || l.target === selected);
+  // po kliknięciu: wszystkie krawędzie wybranego tagu (rysowane na wierzchu)
+  const selectedLinks = selected
+    ? graph.links.filter((l) => touchesSelected(l) && isVisible(l))
+    : [];
+  const visibleLinks = [
+    ...backbone.filter((l) => isVisible(l) && !touchesSelected(l)),
+    ...selectedLinks,
+  ];
   const neighbors = new Map<string, number>();
   if (selected) {
     for (const l of graph.links) {
@@ -468,9 +516,7 @@ function TagMap() {
                 {visibleLinks.map((l) => {
                   const a = pos(l.source);
                   const b = pos(l.target);
-                  const touches =
-                    selected &&
-                    (l.source === selected || l.target === selected);
+                  const touches = touchesSelected(l);
                   return (
                     <line
                       key={`${l.source}|${l.target}`}
@@ -486,7 +532,7 @@ function TagMap() {
                             : 0.05
                           : 0.16 + 0.3 * (l.weight / maxWeight)
                       }
-                      strokeWidth={0.75 + 3.5 * Math.sqrt(l.weight / maxWeight)}
+                      strokeWidth={1.5}
                       strokeLinecap="round"
                       vectorEffect="non-scaling-stroke"
                     />
@@ -619,15 +665,24 @@ function TagMap() {
             <input
               type="range"
               min={1}
-              max={15}
-              value={minWeight}
-              onChange={(e) => setMinWeight(Number(e.target.value))}
-              className="w-28 accent-[var(--accent)]"
-              aria-label="Minimum number of shared words for a line"
+              max={4}
+              value={perNode}
+              onChange={(e) => setPerNode(Number(e.target.value))}
+              className="w-24 accent-[var(--accent)]"
+              aria-label="Lines to the nearest related tags per tag"
             />
             <span>
-              at least <b className="text-heading">{minWeight}</b> shared{" "}
-              {minWeight === 1 ? "word" : "words"} · {visibleLinks.length} lines
+              {selected ? (
+                <>
+                  all <b className="text-heading">{selectedLinks.length}</b>{" "}
+                  links of <b className="text-heading">#{selected}</b>
+                </>
+              ) : (
+                <>
+                  <b className="text-heading">{perNode}</b> nearest per tag ·
+                  click a tag for all its links
+                </>
+              )}
             </span>
           </label>
 
