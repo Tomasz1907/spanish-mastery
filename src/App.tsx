@@ -8,7 +8,7 @@ import Quiz from "./pages/Quiz";
 import Test from "./pages/Test";
 import MatchChaos from "./pages/MatchChaos";
 import TypeRace from "./pages/TypeRace";
-import TagSort from "./pages/TagSort";
+import TagMap from "./pages/TagMap";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -29,7 +29,9 @@ function App() {
             <Route path="/learn" element={<Learn />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/test" element={<Test />} />
-            <Route path="/tag-sort" element={<TagSort />} />
+            <Route path="/tags" element={<TagMap />} />
+            {/* dawny tryb Tag Sort */}
+            <Route path="/tag-sort" element={<Navigate to="/tags" replace />} />
             <Route path="/match-chaos" element={<MatchChaos />} />
             <Route path="/type-race" element={<TypeRace />} />
             <Route path="/profile" element={<Profile />} />

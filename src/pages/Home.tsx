@@ -1,13 +1,10 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
-import Category from "../components/Category";
-import SearchBar from "../components/SearchBar";
+import Dictionary from "../components/Dictionary";
 import SpeakButton from "../components/SpeakButton";
 import StreakBanner from "../components/StreakBanner";
-import { useVocabulary, type CategoryData } from "../lib/vocab";
-
-const PAGE_SIZE = 40;
+import { useVocabulary } from "../lib/vocab";
 
 // zmienia się raz dziennie
 const DAY_NUMBER = Math.floor(Date.now() / 86_400_000);
@@ -32,10 +29,10 @@ const games = [
     description: "Match pairs against the clock.",
   },
   {
-    path: "/tag-sort",
-    icon: "🏷️",
-    name: "Tag Sort",
-    description: "Find the word that fits the topic.",
+    path: "/tags",
+    icon: "🕸️",
+    name: "Tag Map",
+    description: "Explore how topics and words connect.",
   },
   {
     path: "/type-race",
@@ -48,77 +45,8 @@ const games = [
 function Home() {
   const { categories: data, words, loading, error } = useVocabulary();
 
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-
-  const [selectedCategory, setSelectedCategory] = useState("all");
-
-  // "Show more" - zapamiętane dla konkretnego filtra
-  const [limit, setLimit] = useState({ key: "", count: PAGE_SIZE });
-
-  // DEBOUNCING 500ms
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [search]);
-
   const categories = data.map((category) => category.category);
-
-  const normalizedSearch = debouncedSearch.trim().toLowerCase();
-
-  const filteredData = data
-    // filtr kategorii
-    .filter(
-      (category) =>
-        selectedCategory === "all" || category.category === selectedCategory,
-    )
-
-    // filtr wyszukiwania
-    .map((category) => ({
-      ...category,
-      items: category.items.filter((item) => {
-        const searchableText = [
-          item.word,
-          item.translation_pl,
-          item.translation_en,
-          ...item.tags,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return searchableText.includes(normalizedSearch);
-      }),
-    }))
-
-    // usuń puste kategorie
-    .filter((category) => category.items.length > 0);
-
   const totalItems = words.length;
-
-  const availableItems = filteredData.reduce(
-    (sum, category) => sum + category.items.length,
-    0,
-  );
-
-  // PAGINACJA - renderujemy tylko część z 1800 kart
-  const filterKey = `${selectedCategory}|${normalizedSearch}`;
-  const visibleCount = limit.key === filterKey ? limit.count : PAGE_SIZE;
-
-  const visibleData: CategoryData[] = [];
-  let remaining = visibleCount;
-
-  for (const category of filteredData) {
-    if (remaining <= 0) break;
-
-    visibleData.push({
-      ...category,
-      items: category.items.slice(0, remaining),
-    });
-    remaining -= category.items.length;
-  }
 
   const tagCount = new Set(words.flatMap((w) => w.tags)).size;
   const wordOfDay = words.length > 0 ? words[DAY_NUMBER % words.length] : null;
@@ -145,8 +73,8 @@ function Home() {
           className="mx-auto max-w-2xl text-base animate-rise sm:text-lg"
           style={{ "--i": 2 } as CSSProperties}
         >
-          Learn new words step by step, then put your memory to the test in five
-          quick games with Polish and English translations.
+          Learn new words step by step, then put your memory to the test in
+          quick games and explore how words connect on the tag map.
         </p>
 
         <div
@@ -264,47 +192,7 @@ function Home() {
       </section>
 
       {/* DICTIONARY */}
-      <section id="dictionary" className="scroll-mt-24">
-        <h2 className="mb-6">Dictionary</h2>
-
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-        />
-
-        <p className="mb-2">
-          Showing <span className="font-semibold">{availableItems}</span> of{" "}
-          <span className="font-semibold">{totalItems}</span> items
-        </p>
-
-        {loading || error ? (
-          <p className="text-center py-10">
-            {error ? `Could not load words: ${error}` : "Loading..."}
-          </p>
-        ) : (
-          visibleData.map((category) => (
-            <Category key={category.category} data={category} />
-          ))
-        )}
-
-        {visibleCount < availableItems && (
-          <button
-            onClick={() =>
-              setLimit({ key: filterKey, count: visibleCount + PAGE_SIZE })
-            }
-            className="mt-4 rounded-xl border border-line bg-surface px-6 py-3 font-semibold text-heading transition hover:border-accent"
-          >
-            Show more ({availableItems - visibleCount} left)
-          </button>
-        )}
-
-        {!loading && filteredData.length === 0 && (
-          <p className="mt-10 text-center">No results</p>
-        )}
-      </section>
+      <Dictionary data={data} words={words} loading={loading} error={error} />
     </div>
   );
 }

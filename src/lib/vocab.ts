@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
+import type { CefrLevel } from "./tags";
+
 type Conjugation = {
   yo: string;
   tú: string;
@@ -15,6 +17,7 @@ export type WordItem = {
   translation_pl: string;
   translation_en: string;
   part_of_speech: string;
+  level: CefrLevel;
   tags: string[];
 
   example_es?: string;

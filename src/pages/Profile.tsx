@@ -319,7 +319,10 @@ function ActivityChart({ results }: { results: GameResult[] }) {
 // GRY - rozegrane, skuteczność, rekord
 
 function GameBreakdown({ profile }: { profile: UserProfile | null }) {
-  const ids = Object.keys(GAMES) as GameId[];
+  // Tag Sort został zastąpiony mapą tagów - jego wyniki zostają tylko w historii
+  const ids = (Object.keys(GAMES) as GameId[]).filter(
+    (id) => id !== "tag-sort",
+  );
 
   return (
     <Panel>

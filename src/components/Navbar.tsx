@@ -12,7 +12,7 @@ const links = [
   { name: "Learn", path: "/learn", icon: "📖" },
   { name: "Quiz", path: "/quiz", icon: "🎯" },
   { name: "Test", path: "/test", icon: "✍️" },
-  { name: "Tag Sort", path: "/tag-sort", icon: "🏷️" },
+  { name: "Tag Map", path: "/tags", icon: "🕸️" },
   { name: "Match Chaos", path: "/match-chaos", icon: "⚡" },
   { name: "Type Race", path: "/type-race", icon: "🏎️" },
 ];

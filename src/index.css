@@ -216,6 +216,47 @@
   animation: float 6s ease-in-out infinite;
 }
 
+/* ── POZIOMY CEFR ───────────────────────────────────────────────────── */
+
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--lvl);
+  background: color-mix(in srgb, var(--lvl) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lvl) 35%, transparent);
+}
+
+.level-A1 {
+  --lvl: #15803d;
+}
+.level-A2 {
+  --lvl: #0e7490;
+}
+.level-B1 {
+  --lvl: #b45309;
+}
+.level-B2 {
+  --lvl: #b91c1c;
+}
+
+.dark .level-A1 {
+  --lvl: #4ade80;
+}
+.dark .level-A2 {
+  --lvl: #22d3ee;
+}
+.dark .level-B1 {
+  --lvl: #fbbf24;
+}
+.dark .level-B2 {
+  --lvl: #f87171;
+}
+
 /* ── ANIMACJE ─────────────────────────────────────────────────────────── */
 
 /* wejście strony przy zmianie trasy */

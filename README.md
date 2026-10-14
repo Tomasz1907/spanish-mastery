@@ -1,6 +1,6 @@
 # 🇪🇸 Spanish Mastery
 
-**Learn Spanish through play.** A vocabulary trainer with 1,800 words, step-by-step lessons, five quick games, pronunciation, Polish & English translations, cloud-saved progress and global leaderboards.
+**Learn Spanish through play.** A vocabulary trainer with 1,880 words from A1 to B2, step-by-step lessons, an interactive tag map, four quick games, pronunciation, Polish & English translations, cloud-saved progress and global leaderboards.
 
 **▶ Live app: [spanish-mastery.web.app](https://spanish-mastery.web.app)**
 
@@ -30,6 +30,12 @@
 |---|---|
 | ![Quiz](docs/screenshots/quiz-dark.png) | ![Type Race](docs/screenshots/type-race.png) |
 
+### 🕸️ Tag Map & dictionary
+
+| Tag Map (selected tag) | Dictionary filtered by level |
+|---|---|
+| ![Tag Map](docs/screenshots/tag-map.png) | ![Dictionary](docs/screenshots/dictionary.png) |
+
 ### 📊 Profile & leaderboards
 
 | Profile | Top 10 scores |
@@ -44,6 +50,8 @@
   <img src="docs/screenshots/menu-mobile.png" alt="Slide-out menu" width="220">
   &nbsp;
   <img src="docs/screenshots/match-mobile.png" alt="Match Chaos on a phone" width="220">
+  &nbsp;
+  <img src="docs/screenshots/tag-map-mobile.png" alt="Tag details on a phone" width="220">
 </p>
 
 ### 🔐 Sign in
@@ -56,11 +64,12 @@
 
 ## Features
 
-- **1,800 words in 36 topics.** From basic communication to travel, health and business. Each word has Polish and English translations, an example sentence in all three languages, and grammar details: article and plural for nouns, present-tense conjugation for verbs, feminine forms for adjectives.
+- **1,880 words in 36 topics, levels A1–B2.** From basic communication to travel, health and business. Every category covers all four CEFR levels. Each word has a level, three descriptive tags, Polish and English translations, an example sentence in all three languages, and grammar details: article and plural for nouns, present-tense conjugation for verbs, feminine forms for adjectives.
 - **Learn mode:** short lessons in four steps (discover, recognize, recall, spell). Words you get wrong come back until you get them right, and new words are picked first.
 - **Review from your profile:** the words you miss most often are listed on your profile. Review all of them in one lesson, or pick a single word.
 - **Text to speech:** a speaker icon next to words and example sentences reads them aloud in Spanish, Polish or English, using the most natural voice your browser offers.
-- **Five games**, each with its own settings (category, language, direction, number of questions).
+- **Tag Map:** an interactive graph of all 64 tags. Bubble size shows how many words a tag has, and lines connect tags that describe the same words. You can zoom, pan, drag bubbles and click a tag to see its words, levels and related tags.
+- **Four games**, each with its own settings (category, language, direction, number of questions).
 - **Accounts:** email/password or Google sign-in (Firebase Authentication). The app is available only to signed-in users.
 - **Progress saved to your profile:** XP and levels, accuracy, day streaks, personal records and per-word mastery, stored in Cloud Firestore.
 - **Profile page** with an activity chart, mastery per category and a list of the words you get wrong most often.
@@ -68,7 +77,8 @@
 - **Sound effects** for answers, combos and records, with a volume control and mute switch.
 - **Mobile-first layout:** slide-out menu, game screens that don't jump around, and text that always fits.
 - **Smooth animations:** page transitions, flip cards, staggered lists and confetti for records. They're turned off automatically when the system asks for reduced motion.
-- **Searchable dictionary** and a light/dark theme.
+- **Dictionary** with search, filters by CEFR level, category and tag, and sorting by category, level, tag or alphabet.
+- **Light and dark theme.**
 
 ### Modes
 
@@ -78,7 +88,7 @@
 | 🎯 **Quiz** | Pick the correct translation out of four options (keys 1–4 + Enter). |
 | ✍️ **Test** | Type the translation yourself. A missing accent still counts, with a hint. |
 | ⚡ **Match Chaos** | Match Spanish words with their translations against the clock. Every cleared board adds +3 s. |
-| 🏷️ **Tag Sort** | A topic appears; find the one word that belongs to it. |
+| 🕸️ **Tag Map** | Explore how tags connect, then open a tag in the dictionary or start a lesson with its words. |
 | 🏎️ **Type Race** | Type Spanish sentences as fast as you can. Shows WPM and accuracy. |
 
 ## Tech stack
@@ -125,9 +135,9 @@ npm run deploy                         # build + hosting
 ## Project structure
 
 ```
-public/data/data.json     vocabulary (36 categories × 50 words)
+public/data/data.json     vocabulary (1,880 words in 36 categories, A1–B2)
 src/
-  pages/                  Home, Learn, Profile, Login, Register and the five games
+  pages/                  Home, Learn, Tag Map, Profile, Login, Register and the games
   components/             UI building blocks (GameUI, Leaderboard, SoundControl, …)
   context/                authentication state (useAuth)
   lib/
@@ -135,6 +145,7 @@ src/
     progress.ts           saving results, profile, leaderboards (Firestore)
     sound.ts              synthesized sound effects and volume settings
     speech.ts             text to speech with natural voice selection
+    tags.ts               tag groups (topic / meaning / usage) and CEFR levels
     firebase.ts           Firebase initialization
 firestore.rules           Firestore security rules
 firestore.indexes.json    Firestore indexes
@@ -151,7 +162,8 @@ firestore.indexes.json    Firestore indexes
   "translation_pl": "wycieczka",
   "translation_en": "excursion / day trip",
   "part_of_speech": "noun",
-  "tags": ["travel"],
+  "level": "A2",
+  "tags": ["travel", "leisure", "nature"],
   "article": "la",
   "gender": "feminine",
   "plural": "las excursiones",
@@ -162,6 +174,9 @@ firestore.indexes.json    Firestore indexes
 ```
 
 Verbs also include `conjugation` (present tense), `gerund`, `participle` and `regular`. Adjectives include `masculine_form` and `feminine_form`.
+
+- `level`: CEFR level (`A1`, `A2`, `B1`, `B2`).
+- `tags`: exactly three tags from a fixed list of 64, in three groups: **topic** (what the word is about, e.g. `travel`, `health`), **meaning** (what it does in a sentence, e.g. `action`, `description`, `connector`) and **usage** (how it's used, e.g. `everyday`, `formal`, `irregular`).
 
 ### Firestore
 

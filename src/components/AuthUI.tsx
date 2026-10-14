@@ -12,8 +12,8 @@ const FLOATING_WORDS = [
 ];
 
 const FEATURES = [
-  { icon: "📚", text: "1,800 words with Polish & English translations" },
-  { icon: "🎮", text: "5 games: quiz, typing test, matching & more" },
+  { icon: "📚", text: "1,880 words from A1 to B2, in Polish & English" },
+  { icon: "🎮", text: "Lessons, 4 games and an interactive tag map" },
   { icon: "🏆", text: "Beat your personal records every day" },
 ];
 

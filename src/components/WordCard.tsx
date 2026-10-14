@@ -1,11 +1,18 @@
+import { prettyTag } from "../lib/tags";
 import { splitArticle, withArticle, type WordItem } from "../lib/vocab";
+import LevelBadge from "./LevelBadge";
 import SpeakButton from "./SpeakButton";
 
 type Props = {
   item: WordItem;
+  // nazwa kategorii - pokazywana, gdy karty nie są pogrupowane
+  category?: string;
+  // kliknięcie w tag (np. filtrowanie słownika)
+  onTagClick?: (tag: string) => void;
+  activeTag?: string;
 };
 
-function WordCard({ item }: Props) {
+function WordCard({ item, category, onTagClick, activeTag }: Props) {
   const { article, base } = splitArticle(item);
   const hasDetails =
     item.example_es ||
@@ -27,24 +34,43 @@ function WordCard({ item }: Props) {
           <SpeakButton text={withArticle(item)} size="sm" />
         </div>
 
-        <span className="shrink-0 rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-strong">
-          {item.part_of_speech}
+        <span className="flex shrink-0 items-center gap-1.5">
+          <LevelBadge level={item.level} />
+          <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-strong">
+            {item.part_of_speech}
+          </span>
         </span>
       </div>
+
+      {category && <p className="mt-1 text-xs opacity-70">{category}</p>}
 
       <p className="mt-2">🇵🇱 {item.translation_pl}</p>
       <p>🇬🇧 {item.translation_en}</p>
 
       {item.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {item.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-md bg-surface-2 px-2 py-0.5 text-xs"
-            >
-              #{tag}
-            </span>
-          ))}
+          {item.tags.map((tag) =>
+            onTagClick ? (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => onTagClick(tag)}
+                title={`Show all words tagged “${prettyTag(tag)}”`}
+                className={`rounded-md px-2 py-0.5 text-xs transition hover:bg-accent-soft hover:text-heading ${
+                  activeTag === tag ? "bg-accent text-black" : "bg-surface-2"
+                }`}
+              >
+                #{tag}
+              </button>
+            ) : (
+              <span
+                key={tag}
+                className="rounded-md bg-surface-2 px-2 py-0.5 text-xs"
+              >
+                #{tag}
+              </span>
+            ),
+          )}
         </div>
       )}
 
